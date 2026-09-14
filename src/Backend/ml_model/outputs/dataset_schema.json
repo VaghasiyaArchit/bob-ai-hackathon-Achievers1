@@ -1,0 +1,202 @@
+{
+  "dataset_name": "Power Grid Transformer Predictive Maintenance (DGA Telemetry)",
+  "domain": "Electrical Power Transformer Health Monitoring & Dissolved Gas Analysis (DGA)",
+  "dataset_structure": {
+    "total_files_count": 3004,
+    "root_files": [
+      "labels_fdd_train.csv",
+      "labels_fdd_test.csv",
+      "labels_rul_train.csv",
+      "labels_rul_test.csv"
+    ],
+    "directories": {
+      "data_train": {
+        "file_count": 2100,
+        "file_naming_convention": "2_trans_<id>.csv",
+        "format": "CSV",
+        "fixed_rows_per_file": 420,
+        "total_observations": 882000,
+        "has_header": true,
+        "columns": [
+          "H2",
+          "CO",
+          "C2H4",
+          "C2H2"
+        ]
+      },
+      "data_test": {
+        "file_count": 900,
+        "file_naming_convention": "2_trans_<id>.csv",
+        "format": "CSV",
+        "fixed_rows_per_file": 420,
+        "total_observations": 378000,
+        "has_header": true,
+        "columns": [
+          "H2",
+          "CO",
+          "C2H4",
+          "C2H2"
+        ]
+      }
+    }
+  },
+  "file_schemas": {
+    "time_series_files": {
+      "description": "Individual transformer dissolved gas telemetry time-series (420 sequential steps per asset)",
+      "columns": {
+        "H2": {
+          "data_type": "float64",
+          "physical_meaning": "Dissolved Hydrogen gas in dielectric transformer oil",
+          "unit": "Volume fraction / concentration (mol fraction)",
+          "train_min": 1.7845256498e-08,
+          "train_max": 0.005622304522,
+          "test_min": 1.2293191766e-07,
+          "test_max": 0.0047978540225,
+          "missing_count": 0,
+          "fault_indication": "Partial discharge, corona, low-energy electrical sparking"
+        },
+        "CO": {
+          "data_type": "float64",
+          "physical_meaning": "Dissolved Carbon Monoxide gas in dielectric transformer oil",
+          "unit": "Volume fraction / concentration (mol fraction)",
+          "train_min": 1.4968065089e-08,
+          "train_max": 0.057476375101,
+          "test_min": 3.0917381206e-07,
+          "test_max": 0.054937423083,
+          "missing_count": 0,
+          "fault_indication": "Thermal degradation of solid cellulose insulation paper / pressboard"
+        },
+        "C2H4": {
+          "data_type": "float64",
+          "physical_meaning": "Dissolved Ethylene gas in dielectric transformer oil",
+          "unit": "Volume fraction / concentration (mol fraction)",
+          "train_min": 7.8657582192e-09,
+          "train_max": 0.01539377716,
+          "test_min": 8.8730196814e-08,
+          "test_max": 0.014894263789,
+          "missing_count": 0,
+          "fault_indication": "High-temperature thermal oil breakdown (> 700 deg C hot-spots)"
+        },
+        "C2H2": {
+          "data_type": "float64",
+          "physical_meaning": "Dissolved Acetylene gas in dielectric transformer oil",
+          "unit": "Volume fraction / concentration (mol fraction)",
+          "train_min": 7.8974110705e-11,
+          "train_max": 0.00067070654414,
+          "test_min": 2.9173585346e-10,
+          "test_max": 0.0005863746525,
+          "missing_count": 0,
+          "fault_indication": "High-energy electrical arcing, dielectric flashover, severe internal faults"
+        }
+      }
+    },
+    "labels_fdd_train.csv": {
+      "description": "Fault Detection & Diagnosis target labels for the training set",
+      "row_count": 2100,
+      "column_count": 2,
+      "missing_values": 0,
+      "duplicate_rows": 0,
+      "join_key": "id",
+      "columns": {
+        "id": {
+          "data_type": "string",
+          "description": "Corresponding filename in data_train/"
+        },
+        "category": {
+          "data_type": "int64",
+          "description": "Discrete fault diagnostic classification category",
+          "unique_values": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "class_distribution": {
+            "1 (Normal / Cellulose)": 1705,
+            "2 (Low-energy discharge / PD)": 89,
+            "3 (High-temp thermal oil fault)": 113,
+            "4 (Mixed / Arcing / Overheating)": 193
+          }
+        }
+      }
+    },
+    "labels_fdd_test.csv": {
+      "description": "Fault Detection & Diagnosis target labels for the testing set",
+      "row_count": 900,
+      "column_count": 2,
+      "missing_values": 0,
+      "duplicate_rows": 0,
+      "join_key": "id",
+      "columns": {
+        "id": {
+          "data_type": "string",
+          "description": "Corresponding filename in data_test/"
+        },
+        "category": {
+          "data_type": "int64",
+          "description": "Discrete fault diagnostic classification category",
+          "unique_values": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "class_distribution": {
+            "1 (Normal / Cellulose)": 731,
+            "2 (Low-energy discharge / PD)": 38,
+            "3 (High-temp thermal oil fault)": 49,
+            "4 (Mixed / Arcing / Overheating)": 82
+          }
+        }
+      }
+    },
+    "labels_rul_train.csv": {
+      "description": "Remaining Useful Life target labels for the training set",
+      "row_count": 2100,
+      "column_count": 2,
+      "missing_values": 0,
+      "duplicate_rows": 0,
+      "join_key": "id",
+      "columns": {
+        "id": {
+          "data_type": "string",
+          "description": "Corresponding filename in data_train/"
+        },
+        "predicted": {
+          "data_type": "int64",
+          "description": "Remaining Useful Life (RUL) in time-steps/cycles before failure threshold",
+          "min": 362,
+          "max": 1093,
+          "mean": 793.13,
+          "median": 758.0,
+          "std": 243.32,
+          "right_censored_max_value": 1093
+        }
+      }
+    },
+    "labels_rul_test.csv": {
+      "description": "Remaining Useful Life target labels for the testing set",
+      "row_count": 900,
+      "column_count": 2,
+      "missing_values": 0,
+      "duplicate_rows": 0,
+      "join_key": "id",
+      "columns": {
+        "id": {
+          "data_type": "string",
+          "description": "Corresponding filename in data_test/"
+        },
+        "predicted": {
+          "data_type": "int64",
+          "description": "Remaining Useful Life (RUL) in time-steps/cycles before failure threshold",
+          "min": 404,
+          "max": 1093,
+          "mean": 799.93,
+          "median": 776.0,
+          "std": 238.6,
+          "right_censored_max_value": 1093
+        }
+      }
+    }
+  }
+}

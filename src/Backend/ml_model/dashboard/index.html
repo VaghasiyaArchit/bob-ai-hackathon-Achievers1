@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power Grid AI — Transformer Fleet Health Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #080d1a;
+      --bg-surface: #0f172a;
+      --bg-surface-elevated: #1e293b;
+      --bg-surface-glass: rgba(15, 23, 42, 0.85);
+      --border-subtle: #1e293b;
+      --border-prominent: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --color-critical: #ef4444;
+      --color-critical-bg: rgba(239, 68, 68, 0.12);
+      --color-critical-glow: rgba(239, 68, 68, 0.35);
+
+      --color-high: #f97316;
+      --color-high-bg: rgba(249, 115, 22, 0.12);
+      --color-high-glow: rgba(249, 115, 22, 0.35);
+
+      --color-medium: #eab308;
+      --color-medium-bg: rgba(234, 179, 8, 0.12);
+      --color-medium-glow: rgba(234, 179, 8, 0.35);
+
+      --color-low: #10b981;
+      --color-low-bg: rgba(16, 185, 129, 0.12);
+      --color-low-glow: rgba(16, 185, 129, 0.35);
+
+      --color-cyan: #06b6d4;
+      --color-cyan-glow: rgba(6, 182, 212, 0.35);
+      --color-blue: #3b82f6;
+
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08), transparent);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+      padding-bottom: 60px;
+    }
+
+    /* Top Bar */
+    .top-header {
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 28px;
+    }
+
+    .top-header-inner {
+      max-width: 1540px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--color-cyan-glow);
+    }
+
+    .logo-badge svg {
+      width: 24px;
+      height: 24px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .logo-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-text .badge-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: var(--color-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Mode switcher */
+    .mode-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mode-switch-btn {
+      display: inline-flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-prominent);
+      border-radius: 8px;
+      padding: 3px;
+      user-select: none;
+    }
+
+    .mode-tab {
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-tab.active {
+      background: var(--bg-surface-elevated);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-prominent);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .pulse-dot.online {
+      background: var(--color-low);
+      box-shadow: 0 0 8px var(--color-low);
+      animation: pulseAnim 2s infinite;
+    }
+    .pulse-dot.demo {
+      background: var(--color-cyan);
+      box-shadow: 0 0 8px var(--color-cyan);
+    }
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Scope Banner */
+    .scope-banner {
+      background: linear-gradient(90deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 28px;
+      font-size: 0.82rem;
+    }
+
+    .scope-banner-inner {
+      max-width: 1540px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .scope-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .scope-item .scope-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .scope-tag.input-tag {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .scope-tag.weather-tag {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .scope-text-bold {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1540px;
+      margin: 24px auto 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Fleet KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-prominent);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .kpi-card.kpi-total::before { background: var(--color-cyan); }
+    .kpi-card.kpi-critical::before { background: var(--color-critical); }
+    .kpi-card.kpi-high::before { background: var(--color-high); }
+    .kpi-card.kpi-medium::before { background: var(--color-medium); }
+    .kpi-card.kpi-low::before { background: var(--color-low); }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .kpi-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: var(--font-mono);
+    }
+
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* Main Dashboard Grid */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(30, 41, 59, 0.3);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title-icon {
+      color: var(--color-cyan);
+    }
+
+    /* Risk Table */
+    .table-container {
+      overflow-x: auto;
+      max-height: 640px;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-prominent);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    tr.transformer-row {
+      cursor: pointer;
+      transition: background 0.15s ease, border-left-color 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    tr.transformer-row:hover {
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    tr.transformer-row.active {
+      background: rgba(6, 182, 212, 0.1);
+      border-left: 3px solid var(--color-cyan);
+    }
+
+    tr.transformer-row.critical-row {
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .rank-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .asset-id-cell {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-critical {
+      background: var(--color-critical-bg);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    .badge-high {
+      background: var(--color-high-bg);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+
+    .badge-medium {
+      background: var(--color-medium-bg);
+      color: #facc15;
+      border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+
+    .badge-low {
+      background: var(--color-low-bg);
+      color: #4ade80;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .score-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    /* Detail Panel */
+    .detail-panel-body {
+      padding: 24px;
+    }
+
+    .detail-header-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-prominent);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .detail-asset-info h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .detail-asset-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Visual Indicators / Gauges */
+    .meters-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .meter-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .meter-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .meter-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .meter-bar-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meter-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease, background-color 0.4s ease;
+    }
+
+    /* Diagnostic Detail Sections */
+    .section-box {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-cyan);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fault-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .confidence-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .confidence-track {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #06b6d4);
+      border-radius: 999px;
+    }
+
+    /* Action Box */
+    .action-box {
+      border-left: 4px solid var(--color-cyan);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .action-box.action-critical {
+      border-left-color: var(--color-critical);
+      background: var(--color-critical-bg);
+    }
+
+    .action-box.action-high {
+      border-left-color: var(--color-high);
+      background: var(--color-high-bg);
+    }
+
+    .action-box.action-medium {
+      border-left-color: var(--color-medium);
+      background: var(--color-medium-bg);
+    }
+
+    .action-box.action-low {
+      border-left-color: var(--color-low);
+      background: var(--color-low-bg);
+    }
+
+    .action-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Risk Factors List */
+    .factor-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .factor-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.82rem;
+      background: var(--bg-surface-elevated);
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .factor-idx {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--color-cyan);
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .factor-text {
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    /* Explanation Text */
+    .explanation-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Live API Modal / Controls */
+    .live-api-controls {
+      display: none;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-prominent);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 24px;
+    }
+
+    .live-api-controls.active {
+      display: block;
+    }
+
+    .api-endpoint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: var(--bg-surface);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 12px;
+    }
+
+    .api-endpoint-badge .http-method {
+      background: #0284c7;
+      color: #fff;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+
+    .api-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      color: #ffffff;
+      box-shadow: 0 0 12px var(--color-cyan-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #0891b2);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-prominent);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .api-status-msg {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+
+    /* Footer note */
+    footer {
+      max-width: 1540px;
+      margin: 40px auto 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 20px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="top-header">
+    <div class="top-header-inner">
+      <div class="logo-area">
+        <div class="logo-badge">
+          <svg viewBox="0 0 24 24">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>
+            POWER GRID AI
+            <span class="badge-pill">Transformer Diagnostic Hub</span>
+          </h1>
+          <p>Real DGA Multi-Gas Health & Predictive Maintenance Platform</p>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-switch-wrapper">
+        <div class="mode-switch-btn">
+          <button id="btn-mode-demo" class="mode-tab active" onclick="switchMode('demo')">
+            <span class="pulse-dot demo"></span>
+            DEMO MODE (10 Assets)
+          </button>
+          <button id="btn-mode-live" class="mode-tab" onclick="switchMode('live')">
+            <span id="live-dot" class="pulse-dot"></span>
+            LIVE API MODE
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Explicit Scope Banner (Mandatory Requirement) -->
+  <div class="scope-banner">
+    <div class="scope-banner-inner">
+      <div class="scope-item">
+        <span class="scope-tag input-tag">Input Source</span>
+        <span>Current ML model input: <span class="scope-text-bold">DGA sensor data</span> (H2, CO, C2H4, C2H2 time series)</span>
+      </div>
+      <div class="scope-item">
+        <span class="scope-tag weather-tag">Scope Boundary</span>
+        <span>Weather data: <span class="scope-text-bold">Not currently included in the ML model</span> (Downstream grid integration ready)</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <!-- Live API Testing Controls (Visible only in Live API Mode) -->
+    <section id="live-api-controls" class="live-api-controls">
+      <div class="panel-header" style="background: transparent; padding: 0 0 12px 0;">
+        <div class="panel-title">
+          <span class="panel-title-icon">⚡</span>
+          Live Model Inference Client
+        </div>
+        <div class="api-endpoint-badge">
+          <span class="http-method">POST</span>
+          <span>http://localhost:8000/predict</span>
+        </div>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+        Test live ML prediction by selecting a representative real transformer or pinging the microservice health status.
+      </p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button class="btn btn-secondary" onclick="checkApiHealth()">Check API Health (GET /health)</button>
+        <button class="btn btn-primary" onclick="runLivePredict('2_trans_939.csv')">Predict Sample: 2_trans_939 (Critical Arcing)</button>
+        <button class="btn btn-primary" onclick="runLivePredict('2_trans_2556.csv')">Predict Sample: 2_trans_2556 (Low Normal)</button>
+      </div>
+      <div id="api-status-msg" class="api-status-msg" style="color: var(--color-cyan);"></div>
+    </section>
+
+    <!-- Fleet KPI Overview -->
+    <section class="kpi-grid">
+      <div class="kpi-card kpi-total">
+        <div class="kpi-header">
+          <span class="kpi-label">Monitored Fleet</span>
+          <span class="kpi-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--color-cyan);">TOTAL</span>
+        </div>
+        <div class="kpi-value" id="kpi-total">10</div>
+        <div class="kpi-sub">Substation units assessed</div>
+      </div>
+
+      <div class="kpi-card kpi-critical">
+        <div class="kpi-header">
+          <span class="kpi-label">Critical Priority</span>
+          <span class="kpi-badge" style="background: var(--color-critical-bg); color: #f87171;">RISK ≥ 85</span>
+        </div>
+        <div class="kpi-value" id="kpi-critical" style="color: #f87171;">1</div>
+        <div class="kpi-sub">Immediate inspection required</div>
+      </div>
+
+      <div class="kpi-card kpi-high">
+        <div class="kpi-header">
+          <span class="kpi-label">High Risk</span>
+          <span class="kpi-badge" style="background: var(--color-high-bg); color: #fb923c;">60 ≤ RISK &lt; 85</span>
+        </div>
+        <div class="kpi-value" id="kpi-high" style="color: #fb923c;">3</div>
+        <div class="kpi-sub">Urgent planned maintenance</div>
+      </div>
+
+      <div class="kpi-card kpi-medium">
+        <div class="kpi-header">
+          <span class="kpi-label">Medium Risk</span>
+          <span class="kpi-badge" style="background: var(--color-medium-bg); color: #facc15;">35 ≤ RISK &lt; 60</span>
+        </div>
+        <div class="kpi-value" id="kpi-medium" style="color: #facc15;">3</div>
+        <div class="kpi-sub">Scheduled monitoring</div>
+      </div>
+
+      <div class="kpi-card kpi-low">
+        <div class="kpi-header">
+          <span class="kpi-label">Low Risk / Normal</span>
+          <span class="kpi-badge" style="background: var(--color-low-bg); color: #4ade80;">RISK &lt; 35</span>
+        </div>
+        <div class="kpi-value" id="kpi-low" style="color: #4ade80;">3</div>
+        <div class="kpi-sub">Healthy baseline operation</div>
+      </div>
+    </section>
+
+    <!-- Main Content: Ranking Table + Detail Panel -->
+    <div class="dashboard-layout">
+      
+      <!-- Risk Ranking Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-title-icon">📊</span>
+            Transformer Risk Ranking (Descending)
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-dim);">
+            Click any row to inspect telemetry & XAI
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="risk-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Asset ID</th>
+                <th>Risk Score</th>
+                <th>Category</th>
+                <th>Fault</th>
+                <th>Confidence</th>
+                <th>RUL (Cycles)</th>
+                <th>Recommended Action</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detail Panel -->
+      <div class="panel" id="detail-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-title-icon">🔍</span>
+            Transformer Telemetry & Diagnostic Detail
+          </div>
+          <span id="detail-mode-badge" class="badge badge-low">READY</span>
+        </div>
+
+        <div class="detail-panel-body">
+          
+          <!-- Asset Header Card -->
+          <div class="detail-header-card">
+            <div class="detail-asset-info">
+              <h2 id="detail-asset-id">2_trans_939.csv</h2>
+              <p>Primary Substation Power Transformer • 420-step DGA Time Series</p>
+            </div>
+            <div id="detail-category-badge">
+              <span class="badge badge-critical">CRITICAL</span>
+            </div>
+          </div>
+
+          <!-- Meters Grid (Visual Risk Indicators) -->
+          <div class="meters-grid">
+            <div class="meter-card">
+              <div class="meter-label">Composite Risk</div>
+              <div class="meter-value" id="meter-risk-val">85.12</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill" id="meter-risk-fill" style="width: 85.12%; background: var(--color-critical);"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-label">Remaining Useful Life</div>
+              <div class="meter-value" id="meter-rul-val">417.3</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill" id="meter-rul-fill" style="width: 34.7%; background: var(--color-critical);"></div>
+              </div>
+            </div>
+
+            <div class="meter-card">
+              <div class="meter-label">Anomaly Score</div>
+              <div class="meter-value" id="meter-anomaly-val">51.08</div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill" id="meter-anomaly-fill" style="width: 51.08%; background: var(--color-medium);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Predicted Fault & Confidence -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>⚡</span>
+              Predicted FDD Fault Classification
+            </div>
+            <div class="fault-title" id="detail-fault-name">Class 4: High-Energy Electrical Arcing / Flashover</div>
+            <div class="confidence-row">
+              <span>Model Confidence:</span>
+              <div class="confidence-track">
+                <div class="confidence-fill" id="detail-conf-fill" style="width: 99.98%;"></div>
+              </div>
+              <span id="detail-conf-val" style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">99.98%</span>
+            </div>
+          </div>
+
+          <!-- Recommended Action Box -->
+          <div class="section-box action-box action-critical" id="detail-action-box">
+            <div class="section-header" style="color: inherit; opacity: 0.9;">
+              <span>🚨</span>
+              Recommended Action
+            </div>
+            <div class="action-text" id="detail-action-text">
+              Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review.
+            </div>
+          </div>
+
+          <!-- Top 3 Risk Factors -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>🎯</span>
+              Top 3 Risk Factors (Root Cause Drivers)
+            </div>
+            <ul class="factor-list" id="detail-factors-list">
+              <li class="factor-item">
+                <span class="factor-idx">1</span>
+                <span class="factor-text">Predicted Class 4 arcing pattern (confidence 100.0%)</span>
+              </li>
+              <li class="factor-item">
+                <span class="factor-idx">2</span>
+                <span class="factor-text">Critically depleted remaining useful life (approx. 417 cycles)</span>
+              </li>
+              <li class="factor-item">
+                <span class="factor-idx">3</span>
+                <span class="factor-text">Elevated terminal Ethylene concentration (C2H4 = 0.00873)</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Explainable AI (XAI) Narrative Explanation -->
+          <div class="section-box">
+            <div class="section-header">
+              <span>🧠</span>
+              Explainable AI (XAI) Synthesis
+            </div>
+            <p class="explanation-text" id="detail-explanation">
+              Model predicts Class 4: High-Energy Electrical Arcing / Flashover with high confidence (100.0%). Predicted Class 4 arcing pattern (confidence 100.0%) and Critically depleted remaining useful life (approx. 417 cycles) serve as strong contributing DGA signals consistent with the predicted fault pattern, while predicted RUL is approximately 417 cycles. Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div>Power Grid AI • Transformer Health Diagnostic Hub (Task 7 Integration)</div>
+    <div>ML Microservice: FastAPI • HistGradientBoostingClassifier & Regressor • IEEE/IEC DGA Features</div>
+  </footer>
+
+  <!-- Embedded Demo Dataset for Instant Offline & File:// Compatibility -->
+  <script>
+    const DEMO_TRANSFORMERS = [
+      {
+        "asset_id": "2_trans_939.csv",
+        "risk_score": 85.12,
+        "risk_category": "CRITICAL",
+        "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+        "fault_confidence": 0.9998,
+        "predicted_rul": 417.27,
+        "anomaly_score": 51.08,
+        "top_risk_factors": [
+          "Predicted Class 4 arcing pattern (confidence 100.0%)",
+          "Critically depleted remaining useful life (approx. 417 cycles)",
+          "Elevated terminal Ethylene concentration (C2H4 = 0.00873)"
+        ],
+        "recommended_action": "Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review.",
+        "explanation": "Model predicts Class 4: High-Energy Electrical Arcing / Flashover with high confidence (100.0%). Predicted Class 4 arcing pattern (confidence 100.0%) and Critically depleted remaining useful life (approx. 417 cycles) serve as strong contributing DGA signals consistent with the predicted fault pattern, while predicted RUL is approximately 417 cycles. Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review."
+      },
+      {
+        "asset_id": "2_trans_1672.csv",
+        "risk_score": 83.71,
+        "risk_category": "HIGH",
+        "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+        "fault_confidence": 1.0,
+        "predicted_rul": 465.13,
+        "anomaly_score": 54.59,
+        "top_risk_factors": [
+          "Predicted Class 4 arcing pattern (confidence 100.0%)",
+          "Elevated terminal Acetylene concentration (C2H2 = 0.00046)",
+          "Critically depleted remaining useful life (approx. 465 cycles)"
+        ],
+        "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+        "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Elevated terminal Acetylene concentration (C2H2 = 0.00046), while estimated RUL is 465 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+      },
+      {
+        "asset_id": "2_trans_1036.csv",
+        "risk_score": 82.86,
+        "risk_category": "HIGH",
+        "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+        "fault_confidence": 1.0,
+        "predicted_rul": 437.32,
+        "anomaly_score": 45.87,
+        "top_risk_factors": [
+          "Predicted Class 4 arcing pattern (confidence 100.0%)",
+          "Elevated terminal Acetylene concentration (C2H2 = 0.00053)",
+          "Critically depleted remaining useful life (approx. 437 cycles)"
+        ],
+        "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+        "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Elevated terminal Acetylene concentration (C2H2 = 0.00053), while estimated RUL is 437 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+      },
+      {
+        "asset_id": "2_trans_1081.csv",
+        "risk_score": 81.45,
+        "risk_category": "HIGH",
+        "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+        "fault_confidence": 1.0,
+        "predicted_rul": 482.82,
+        "anomaly_score": 48.93,
+        "top_risk_factors": [
+          "Predicted Class 4 arcing pattern (confidence 100.0%)",
+          "Critically depleted remaining useful life (approx. 483 cycles)",
+          "Elevated terminal Hydrogen concentration (H2 = 0.00463)"
+        ],
+        "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+        "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Critically depleted remaining useful life (approx. 483 cycles), while estimated RUL is 483 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+      },
+      {
+        "asset_id": "2_trans_81.csv",
+        "risk_score": 59.78,
+        "risk_category": "MEDIUM",
+        "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+        "fault_confidence": 1.0,
+        "predicted_rul": 830.65,
+        "anomaly_score": 28.87,
+        "top_risk_factors": [
+          "Predicted Class 4 arcing pattern (confidence 100.0%)",
+          "Elevated terminal Hydrogen concentration (H2 = 0.00351)",
+          "DGA combustible gas concentrations remain within standard limits"
+        ],
+        "recommended_action": "Schedule planned inspection and continue monitoring.",
+        "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) represents an important indicator of moderate operational stress, with estimated remaining useful life at 831 cycles. Schedule planned inspection and continue monitoring."
+      },
+      {
+        "asset_id": "2_trans_2911.csv",
+        "risk_score": 59.7,
+        "risk_category": "MEDIUM",
+        "predicted_fault": "Class 2: Low-Energy Partial Discharge (PD / Corona)",
+        "fault_confidence": 1.0,
+        "predicted_rul": 507.45,
+        "anomaly_score": 38.64,
+        "top_risk_factors": [
+          "Elevated terminal Hydrogen concentration (H2 = 0.00401)",
+          "Predicted Class 2 partial discharge pattern (confidence 100.0%)",
+          "Substantially degraded remaining useful life (507 cycles)"
+        ],
+        "recommended_action": "Schedule planned inspection and continue monitoring.",
+        "explanation": "Model identifies Class 2: Low-Energy Partial Discharge (PD / Corona) pattern (100.0% confidence). Elevated terminal Hydrogen concentration (H2 = 0.00401) represents an important indicator of moderate operational stress, with estimated remaining useful life at 507 cycles. Schedule planned inspection and continue monitoring."
+      },
+      {
+        "asset_id": "2_trans_1851.csv",
+        "risk_score": 59.34,
+        "risk_category": "MEDIUM",
+        "predicted_fault": "Class 3: High-Temperature Thermal Oil Breakdown (> 700°C)",
+        "fault_confidence": 1.0,
+        "predicted_rul": 676.28,
+        "anomaly_score": 29.55,
+        "top_risk_factors": [
+          "Elevated terminal Acetylene concentration (C2H2 = 0.00032)",
+          "Predicted Class 3 thermal breakdown pattern (confidence 100.0%)",
+          "Elevated terminal Ethylene concentration (C2H4 = 0.01059)"
+        ],
+        "recommended_action": "Schedule planned inspection and continue monitoring.",
+        "explanation": "Model identifies Class 3: High-Temperature Thermal Oil Breakdown (> 700°C) pattern (100.0% confidence). Elevated terminal Acetylene concentration (C2H2 = 0.00032) represents an important indicator of moderate operational stress, with estimated remaining useful life at 676 cycles. Schedule planned inspection and continue monitoring."
+      },
+      {
+        "asset_id": "2_trans_2556.csv",
+        "risk_score": 34.96,
+        "risk_category": "LOW",
+        "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+        "fault_confidence": 0.9999,
+        "predicted_rul": 610.0,
+        "anomaly_score": 47.31,
+        "top_risk_factors": [
+          "Elevated terminal Ethylene concentration (C2H4 = 0.01271)",
+          "Accelerating combustible gas generation slope",
+          "Substantially degraded remaining useful life (610 cycles)"
+        ],
+        "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+        "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (100.0% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 610 cycles. Continue normal monitoring and scheduled maintenance."
+      },
+      {
+        "asset_id": "2_trans_1343.csv",
+        "risk_score": 34.86,
+        "risk_category": "LOW",
+        "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+        "fault_confidence": 1.0,
+        "predicted_rul": 525.2,
+        "anomaly_score": 30.69,
+        "top_risk_factors": [
+          "High total combustible gas accumulation (TDCG = 0.0498)",
+          "Substantially degraded remaining useful life (525 cycles)",
+          "Operating within normal Category 1 cellulose aging limits"
+        ],
+        "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+        "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (100.0% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 525 cycles. Continue normal monitoring and scheduled maintenance."
+      },
+      {
+        "asset_id": "2_trans_2014.csv",
+        "risk_score": 34.81,
+        "risk_category": "LOW",
+        "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+        "fault_confidence": 0.9983,
+        "predicted_rul": 578.38,
+        "anomaly_score": 40.39,
+        "top_risk_factors": [
+          "Elevated terminal Hydrogen concentration (H2 = 0.00411)",
+          "Substantially degraded remaining useful life (578 cycles)",
+          "Moderate statistical deviation from Category 1 baseline (40.4/100)"
+        ],
+        "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+        "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (99.8% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 578 cycles. Continue normal monitoring and scheduled maintenance."
+      }
+    ];
+
+    let currentDataset = [...DEMO_TRANSFORMERS];
+    let selectedAssetId = currentDataset[0].asset_id;
+    let currentMode = 'demo';
+
+    // Initialize Dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+      // Sort dataset descending by risk score
+      currentDataset.sort((a, b) => b.risk_score - a.risk_score);
+      renderKpis();
+      renderTable();
+      renderDetail(currentDataset[0]);
+    });
+
+    // Switch between DEMO and LIVE API modes
+    function switchMode(mode) {
+      currentMode = mode;
+      const btnDemo = document.getElementById('btn-mode-demo');
+      const btnLive = document.getElementById('btn-mode-live');
+      const liveControls = document.getElementById('live-api-controls');
+      const liveDot = document.getElementById('live-dot');
+
+      if (mode === 'demo') {
+        btnDemo.classList.add('active');
+        btnLive.classList.remove('active');
+        liveControls.classList.remove('active');
+        liveDot.className = 'pulse-dot';
+        currentDataset = [...DEMO_TRANSFORMERS];
+        currentDataset.sort((a, b) => b.risk_score - a.risk_score);
+        renderKpis();
+        renderTable();
+        renderDetail(currentDataset[0]);
+      } else {
+        btnLive.classList.add('active');
+        btnDemo.classList.remove('active');
+        liveControls.classList.add('active');
+        liveDot.className = 'pulse-dot online';
+        checkApiHealth();
+      }
+    }
+
+    // Render KPI Cards
+    function renderKpis() {
+      const total = currentDataset.length;
+      const critical = currentDataset.filter(d => d.risk_category === 'CRITICAL').length;
+      const high = currentDataset.filter(d => d.risk_category === 'HIGH').length;
+      const medium = currentDataset.filter(d => d.risk_category === 'MEDIUM').length;
+      const low = currentDataset.filter(d => d.risk_category === 'LOW').length;
+
+      document.getElementById('kpi-total').textContent = total;
+      document.getElementById('kpi-critical').textContent = critical;
+      document.getElementById('kpi-high').textContent = high;
+      document.getElementById('kpi-medium').textContent = medium;
+      document.getElementById('kpi-low').textContent = low;
+    }
+
+    // Render Risk Ranking Table
+    function renderTable() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      currentDataset.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = `transformer-row ${item.asset_id === selectedAssetId ? 'active' : ''} ${item.risk_category === 'CRITICAL' ? 'critical-row' : ''}`;
+        tr.onclick = () => {
+          selectedAssetId = item.asset_id;
+          renderTable();
+          renderDetail(item);
+        };
+
+        const rank = index + 1;
+        const badgeClass = `badge-${item.risk_category.toLowerCase()}`;
+        const faultShort = item.predicted_fault.split(':')[0] || item.predicted_fault;
+
+        tr.innerHTML = `
+          <td class="rank-cell">#${rank}</td>
+          <td class="asset-id-cell">${item.asset_id}</td>
+          <td class="score-cell" style="color: ${getCategoryColor(item.risk_category)}">${item.risk_score.toFixed(2)}</td>
+          <td><span class="badge ${badgeClass}">${item.risk_category}</span></td>
+          <td title="${item.predicted_fault}">${faultShort}</td>
+          <td style="font-family: var(--font-mono);">${(item.fault_confidence * 100).toFixed(1)}%</td>
+          <td style="font-family: var(--font-mono);">${Math.round(item.predicted_rul)}</td>
+          <td style="color: var(--text-muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis;" title="${item.recommended_action}">${item.recommended_action}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Render Detail Panel
+    function renderDetail(item) {
+      if (!item) return;
+
+      document.getElementById('detail-asset-id').textContent = item.asset_id;
+      
+      const badgeContainer = document.getElementById('detail-category-badge');
+      const badgeClass = `badge-${item.risk_category.toLowerCase()}`;
+      badgeContainer.innerHTML = `<span class="badge ${badgeClass}">${item.risk_category}</span>`;
+
+      // Visual Risk Meters
+      const riskVal = item.risk_score;
+      const riskColor = getCategoryColor(item.risk_category);
+      document.getElementById('meter-risk-val').textContent = riskVal.toFixed(2);
+      document.getElementById('meter-risk-val').style.color = riskColor;
+      const riskFill = document.getElementById('meter-risk-fill');
+      riskFill.style.width = `${Math.min(100, Math.max(0, riskVal))}%`;
+      riskFill.style.backgroundColor = riskColor;
+
+      // RUL Meter (normalized against 1200 cycles max baseline)
+      const rulVal = item.predicted_rul;
+      const rulPercent = Math.min(100, Math.max(0, (rulVal / 1200) * 100));
+      const rulColor = rulVal < 500 ? 'var(--color-critical)' : (rulVal < 700 ? 'var(--color-medium)' : 'var(--color-low)');
+      document.getElementById('meter-rul-val').textContent = Math.round(rulVal);
+      document.getElementById('meter-rul-val').style.color = rulColor;
+      const rulFill = document.getElementById('meter-rul-fill');
+      rulFill.style.width = `${rulPercent}%`;
+      rulFill.style.backgroundColor = rulColor;
+
+      // Anomaly Score Meter
+      const anomalyVal = item.anomaly_score;
+      const anomalyColor = anomalyVal >= 50 ? 'var(--color-high)' : (anomalyVal >= 35 ? 'var(--color-medium)' : 'var(--color-low)');
+      document.getElementById('meter-anomaly-val').textContent = anomalyVal.toFixed(2);
+      document.getElementById('meter-anomaly-val').style.color = anomalyColor;
+      const anomalyFill = document.getElementById('meter-anomaly-fill');
+      anomalyFill.style.width = `${Math.min(100, Math.max(0, anomalyVal))}%`;
+      anomalyFill.style.backgroundColor = anomalyColor;
+
+      // Fault details
+      document.getElementById('detail-fault-name').textContent = item.predicted_fault;
+      const confPercent = (item.fault_confidence * 100).toFixed(2);
+      document.getElementById('detail-conf-val').textContent = `${confPercent}%`;
+      document.getElementById('detail-conf-fill').style.width = `${confPercent}%`;
+
+      // Action Box styling
+      const actionBox = document.getElementById('detail-action-box');
+      actionBox.className = `section-box action-box action-${item.risk_category.toLowerCase()}`;
+      document.getElementById('detail-action-text').textContent = item.recommended_action;
+
+      // Top 3 Risk Factors
+      const factorList = document.getElementById('detail-factors-list');
+      factorList.innerHTML = '';
+      if (item.top_risk_factors && Array.isArray(item.top_risk_factors)) {
+        item.top_risk_factors.forEach((factor, idx) => {
+          const li = document.createElement('li');
+          li.className = 'factor-item';
+          li.innerHTML = `
+            <span class="factor-idx">${idx + 1}</span>
+            <span class="factor-text">${factor}</span>
+          `;
+          factorList.appendChild(li);
+        });
+      }
+
+      // Explanation
+      document.getElementById('detail-explanation').textContent = item.explanation;
+    }
+
+    function getCategoryColor(cat) {
+      switch (cat) {
+        case 'CRITICAL': return 'var(--color-critical)';
+        case 'HIGH': return 'var(--color-high)';
+        case 'MEDIUM': return 'var(--color-medium)';
+        case 'LOW': return 'var(--color-low)';
+        default: return 'var(--color-cyan)';
+      }
+    }
+
+    // Live API: Check GET /health
+    async function checkApiHealth() {
+      const statusMsg = document.getElementById('api-status-msg');
+      statusMsg.innerHTML = '<span style="color: var(--color-cyan);">Pinging http://localhost:8000/health...</span>';
+      try {
+        const resp = await fetch('http://localhost:8000/health');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        statusMsg.innerHTML = `<span style="color: var(--color-low);">✓ API Connected: status="${data.status}", models_loaded=${data.models_loaded}, uptime=${Math.round(data.uptime_seconds)}s</span>`;
+      } catch (err) {
+        statusMsg.innerHTML = `<span style="color: var(--color-critical);">⚠ API Offline or Unreachable (ensure uvicorn is running on port 8000). Error: ${err.message}</span>`;
+      }
+    }
+
+    // Live API: Predict Sample Asset
+    async function runLivePredict(assetId) {
+      const statusMsg = document.getElementById('api-status-msg');
+      statusMsg.innerHTML = `<span style="color: var(--color-cyan);">Running live prediction for ${assetId}...</span>`;
+
+      // Build simulated or real 420-step payload
+      // For instant zero-network testing from local dashboard, generate the 420-step profile matching the target asset pattern
+      let dgaSteps = [];
+      const isCritical = assetId === '2_trans_939.csv';
+      for (let i = 0; i < 420; i++) {
+        const stepRatio = i / 420;
+        if (isCritical) {
+          dgaSteps.push({
+            "H2": 0.001 + 0.002 * stepRatio,
+            "CO": 0.004 + 0.003 * stepRatio,
+            "C2H4": 0.003 + 0.006 * stepRatio,
+            "C2H2": 0.0001 + 0.0003 * stepRatio
+          });
+        } else {
+          dgaSteps.push({
+            "H2": 0.0005 + 0.0002 * stepRatio,
+            "CO": 0.002 + 0.0005 * stepRatio,
+            "C2H4": 0.001 + 0.0002 * stepRatio,
+            "C2H2": 0.00001 + 0.00001 * stepRatio
+          });
+        }
+      }
+
+      try {
+        const startTime = performance.now();
+        const resp = await fetch('http://localhost:8000/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            asset_id: assetId,
+            data: dgaSteps
+          })
+        });
+        const duration = (performance.now() - startTime).toFixed(1);
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          throw new Error(errData.detail || `HTTP ${resp.status}`);
+        }
+
+        const result = await resp.json();
+        statusMsg.innerHTML = `<span style="color: var(--color-low);">✓ Live Prediction Succeeded in ${duration}ms! Category: ${result.risk_category} (Score: ${result.risk_score.toFixed(2)})</span>`;
+
+        // Update detail panel with live result
+        const liveItem = {
+          asset_id: result.asset_id,
+          risk_score: result.risk_score,
+          risk_category: result.risk_category,
+          predicted_fault: result.predicted_fault,
+          fault_confidence: result.fault_confidence,
+          predicted_rul: result.predicted_rul,
+          anomaly_score: result.anomaly_score,
+          top_risk_factors: result.top_risk_factors,
+          recommended_action: result.recommended_action,
+          explanation: result.explanation
+        };
+
+        // If exists in table, update it or insert at top
+        const existingIdx = currentDataset.findIndex(d => d.asset_id === liveItem.asset_id);
+        if (existingIdx >= 0) {
+          currentDataset[existingIdx] = liveItem;
+        } else {
+          currentDataset.unshift(liveItem);
+        }
+        currentDataset.sort((a, b) => b.risk_score - a.risk_score);
+        selectedAssetId = liveItem.asset_id;
+        renderKpis();
+        renderTable();
+        renderDetail(liveItem);
+
+      } catch (err) {
+        statusMsg.innerHTML = `<span style="color: var(--color-critical);">⚠ Prediction Failed: ${err.message}. Showing local offline fallback.</span>`;
+        // Fallback to demo entry
+        const fallback = DEMO_TRANSFORMERS.find(d => d.asset_id === assetId) || DEMO_TRANSFORMERS[0];
+        selectedAssetId = fallback.asset_id;
+        renderDetail(fallback);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+[
+  {
+    "asset_id": "2_trans_939.csv",
+    "risk_score": 85.12,
+    "risk_category": "CRITICAL",
+    "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+    "fault_confidence": 0.9998,
+    "predicted_rul": 417.27,
+    "anomaly_score": 51.08,
+    "top_risk_factors": [
+      "Predicted Class 4 arcing pattern (confidence 100.0%)",
+      "Critically depleted remaining useful life (approx. 417 cycles)",
+      "Elevated terminal Ethylene concentration (C2H4 = 0.00873)"
+    ],
+    "recommended_action": "Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review.",
+    "explanation": "Model predicts Class 4: High-Energy Electrical Arcing / Flashover with high confidence (100.0%). Predicted Class 4 arcing pattern (confidence 100.0%) and Critically depleted remaining useful life (approx. 417 cycles) serve as strong contributing DGA signals consistent with the predicted fault pattern, while predicted RUL is approximately 417 cycles. Immediate inspection and maintenance recommended. Prioritize this transformer for engineering review."
+  },
+  {
+    "asset_id": "2_trans_1672.csv",
+    "risk_score": 83.71,
+    "risk_category": "HIGH",
+    "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+    "fault_confidence": 1.0,
+    "predicted_rul": 465.13,
+    "anomaly_score": 54.59,
+    "top_risk_factors": [
+      "Predicted Class 4 arcing pattern (confidence 100.0%)",
+      "Elevated terminal Acetylene concentration (C2H2 = 0.00046)",
+      "Critically depleted remaining useful life (approx. 465 cycles)"
+    ],
+    "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+    "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Elevated terminal Acetylene concentration (C2H2 = 0.00046), while estimated RUL is 465 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+  },
+  {
+    "asset_id": "2_trans_1036.csv",
+    "risk_score": 82.86,
+    "risk_category": "HIGH",
+    "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+    "fault_confidence": 1.0,
+    "predicted_rul": 437.32,
+    "anomaly_score": 45.87,
+    "top_risk_factors": [
+      "Predicted Class 4 arcing pattern (confidence 100.0%)",
+      "Elevated terminal Acetylene concentration (C2H2 = 0.00053)",
+      "Critically depleted remaining useful life (approx. 437 cycles)"
+    ],
+    "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+    "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Elevated terminal Acetylene concentration (C2H2 = 0.00053), while estimated RUL is 437 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+  },
+  {
+    "asset_id": "2_trans_1081.csv",
+    "risk_score": 81.45,
+    "risk_category": "HIGH",
+    "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+    "fault_confidence": 1.0,
+    "predicted_rul": 482.82,
+    "anomaly_score": 48.93,
+    "top_risk_factors": [
+      "Predicted Class 4 arcing pattern (confidence 100.0%)",
+      "Critically depleted remaining useful life (approx. 483 cycles)",
+      "Elevated terminal Hydrogen concentration (H2 = 0.00463)"
+    ],
+    "recommended_action": "Schedule urgent inspection/maintenance and closely monitor the transformer.",
+    "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) is an important indicator of significant asset degradation, accompanied by Critically depleted remaining useful life (approx. 483 cycles), while estimated RUL is 483 cycles. Schedule urgent inspection/maintenance and closely monitor the transformer."
+  },
+  {
+    "asset_id": "2_trans_81.csv",
+    "risk_score": 59.78,
+    "risk_category": "MEDIUM",
+    "predicted_fault": "Class 4: High-Energy Electrical Arcing / Flashover",
+    "fault_confidence": 1.0,
+    "predicted_rul": 830.65,
+    "anomaly_score": 28.87,
+    "top_risk_factors": [
+      "Predicted Class 4 arcing pattern (confidence 100.0%)",
+      "Elevated terminal Hydrogen concentration (H2 = 0.00351)",
+      "DGA combustible gas concentrations remain within standard limits"
+    ],
+    "recommended_action": "Schedule planned inspection and continue monitoring.",
+    "explanation": "Model identifies Class 4: High-Energy Electrical Arcing / Flashover pattern (100.0% confidence). Predicted Class 4 arcing pattern (confidence 100.0%) represents an important indicator of moderate operational stress, with estimated remaining useful life at 831 cycles. Schedule planned inspection and continue monitoring."
+  },
+  {
+    "asset_id": "2_trans_2911.csv",
+    "risk_score": 59.7,
+    "risk_category": "MEDIUM",
+    "predicted_fault": "Class 2: Low-Energy Partial Discharge (PD / Corona)",
+    "fault_confidence": 1.0,
+    "predicted_rul": 507.45,
+    "anomaly_score": 38.64,
+    "top_risk_factors": [
+      "Elevated terminal Hydrogen concentration (H2 = 0.00401)",
+      "Predicted Class 2 partial discharge pattern (confidence 100.0%)",
+      "Substantially degraded remaining useful life (507 cycles)"
+    ],
+    "recommended_action": "Schedule planned inspection and continue monitoring.",
+    "explanation": "Model identifies Class 2: Low-Energy Partial Discharge (PD / Corona) pattern (100.0% confidence). Elevated terminal Hydrogen concentration (H2 = 0.00401) represents an important indicator of moderate operational stress, with estimated remaining useful life at 507 cycles. Schedule planned inspection and continue monitoring."
+  },
+  {
+    "asset_id": "2_trans_1851.csv",
+    "risk_score": 59.34,
+    "risk_category": "MEDIUM",
+    "predicted_fault": "Class 3: High-Temperature Thermal Oil Breakdown (> 700\u00b0C)",
+    "fault_confidence": 1.0,
+    "predicted_rul": 676.28,
+    "anomaly_score": 29.55,
+    "top_risk_factors": [
+      "Elevated terminal Acetylene concentration (C2H2 = 0.00032)",
+      "Predicted Class 3 thermal breakdown pattern (confidence 100.0%)",
+      "Elevated terminal Ethylene concentration (C2H4 = 0.01059)"
+    ],
+    "recommended_action": "Schedule planned inspection and continue monitoring.",
+    "explanation": "Model identifies Class 3: High-Temperature Thermal Oil Breakdown (> 700\u00b0C) pattern (100.0% confidence). Elevated terminal Acetylene concentration (C2H2 = 0.00032) represents an important indicator of moderate operational stress, with estimated remaining useful life at 676 cycles. Schedule planned inspection and continue monitoring."
+  },
+  {
+    "asset_id": "2_trans_2556.csv",
+    "risk_score": 34.96,
+    "risk_category": "LOW",
+    "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+    "fault_confidence": 0.9999,
+    "predicted_rul": 610.0,
+    "anomaly_score": 47.31,
+    "top_risk_factors": [
+      "Elevated terminal Ethylene concentration (C2H4 = 0.01271)",
+      "Accelerating combustible gas generation slope",
+      "Substantially degraded remaining useful life (610 cycles)"
+    ],
+    "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+    "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (100.0% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 610 cycles. Continue normal monitoring and scheduled maintenance."
+  },
+  {
+    "asset_id": "2_trans_1343.csv",
+    "risk_score": 34.86,
+    "risk_category": "LOW",
+    "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+    "fault_confidence": 1.0,
+    "predicted_rul": 525.2,
+    "anomaly_score": 30.69,
+    "top_risk_factors": [
+      "High total combustible gas accumulation (TDCG = 0.0498)",
+      "Substantially degraded remaining useful life (525 cycles)",
+      "Operating within normal Category 1 cellulose aging limits"
+    ],
+    "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+    "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (100.0% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 525 cycles. Continue normal monitoring and scheduled maintenance."
+  },
+  {
+    "asset_id": "2_trans_2014.csv",
+    "risk_score": 34.81,
+    "risk_category": "LOW",
+    "predicted_fault": "Class 1: Normal Baseline Degradation (Cellulose Aging)",
+    "fault_confidence": 0.9983,
+    "predicted_rul": 578.38,
+    "anomaly_score": 40.39,
+    "top_risk_factors": [
+      "Elevated terminal Hydrogen concentration (H2 = 0.00411)",
+      "Substantially degraded remaining useful life (578 cycles)",
+      "Moderate statistical deviation from Category 1 baseline (40.4/100)"
+    ],
+    "recommended_action": "Continue normal monitoring and scheduled maintenance.",
+    "explanation": "Model classifies asset as Class 1: Normal Baseline Degradation (Cellulose Aging) (99.8% confidence). Combustible gas measurements are consistent with the healthy Category 1 operating baseline, and predicted RUL is healthy at approximately 578 cycles. Continue normal monitoring and scheduled maintenance."
+  }
+]
